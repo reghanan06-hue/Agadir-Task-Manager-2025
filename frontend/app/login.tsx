@@ -1,73 +1,96 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from 'expo-router';
-
 import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { useRouter } from "expo-router";
 
-export default function login() {
-  const [showPassword, setShowPassword] = useState(false);
- const router = useRouter();
+const API_URL = "http://10.0.2.2:5000";
+
+export default function Login() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    if (!name || !password) {
+      Alert.alert("Erreur", "Tous les champs sont obligatoires");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, password }),
+      });
+
+      const text = await response.text();
+      console.log("Réponse brute backend:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("Ce n'est pas du JSON !");
+        data = null;
+      }
+
+      if (response.ok && data) {
+        Alert.alert("Succès", "Connexion réussie !");
+        setName("");
+        setPassword("");
+        router.push("/addTask"); 
+      } else {
+        Alert.alert("Erreur", data?.error || "Une erreur est survenue");
+      }
+    } catch (err) {
+      console.log("Erreur catch:", err);
+      Alert.alert("Erreur", "Impossible de se connecter, vérifiez vos identifiants");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.titleLogin} > Connexion </Text>
-        <TextInput
-        style={styles.input}
-        placeholder="Username"
-      />
-     
-    
+      <Text style={styles.title}>Connexion</Text>
+
       <TextInput
         style={styles.input}
-        placeholder="Password"
-        secureTextEntry={!showPassword}
+        placeholder="Nom"
+        value={name}
+        onChangeText={setName}
       />
-      <TouchableOpacity
-        style={styles.icon}
-        onPress={() => setShowPassword(!showPassword)}
-      >
-        <Ionicons
-          name={showPassword ? "eye" : "eye-off"}
-          size={22}
-          color="#4b41dfff"
-        />
-              <Text style={styles.titleLogin} > </Text>
 
-      </TouchableOpacity >
-      
-             <TouchableOpacity  style={styles.bttnLogin}
-              onPress={() => router.push("/addTask")} >
+      <TextInput
+        style={styles.input}
+        placeholder="Mot de passe"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={true} // masquer le mot de passe
+      />
 
-
-              <Text style={styles.textBtn}> Se connecter </Text>
-             </TouchableOpacity>
-            
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Connexion</Text>
+      </TouchableOpacity>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: "relative",
-    width: "100%",
-     paddingHorizontal: 20,
-
-    marginVertical: 100,
-
+    padding: 20,
+    marginTop: 40,
   },
-    backgroundImage: {
-    flex: 1, // Ensures the image background takes up the full available space
-    justifyContent: 'center',
-    alignItems: 'center',
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
-  titleLogin:{
-  fontSize:40,
-  fontWeight:"black",
-  alignSelf:"center",
-  marginVertical:20
-
-  },
-
-    input: {
+  input: {
     borderWidth: 2,
     borderColor: "#c4c9d8",
     borderRadius: 10,
@@ -75,30 +98,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
   },
-
-  icon: {
-    position: "absolute",
-    right: 30,
-    top: "58%",
+  button: {
+    backgroundColor: "#261e65",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 10,
   },
-  
-  bttnLogin:{
-  width: '80%',
-     backgroundColor: '#261e65ff',
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 15,
-    marginTop:15,
-    alignSelf:"center"
-
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  textBtn :{
-    color:"white",
-    fontSize:20,
-    fontWeight:"bold",
-    alignSelf:"center",
-    marginVertical:10
-
-  }
-
 });

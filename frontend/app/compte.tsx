@@ -1,118 +1,115 @@
 
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  StyleSheet,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
+
+const API_URL = "http://10.0.2.2:5000";
 
 export default function Compte() {
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
-  const [message, setMessage] = useState("");
-
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-  };
-
- const handleSubmit = async () => {
-  if (!form.name || !form.email || !form.password) {
-    const msg = "Tous les champs sont obligatoires";
-    setMessage(msg);
-    Alert.alert("Erreur", msg);
-    return;
-  }
-
-  try {
-    const response = await fetch("http://10.0.2.2:5000/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await response.json();
-    console.log("Réponse backend:", data);
-
-    if (response.ok) {
-      Alert.alert("Succès", data.message);  // Ici le message du backend
-      setMessage("");
-      setForm({ name: "", email: "", password: "" });
-      router.push("/login"); // redirection après succès
-    } else {
-      const msg = data.message || "Une erreur est survenue";
-      setMessage(msg);
-      Alert.alert("Erreur", msg);
+  const handleSignup = async () => {
+    if (!name || !email || !password) {
+      Alert.alert("Erreur", "Tous les champs sont obligatoires");
+      return;
     }
-  } catch (err) {
-    console.log("Erreur catch:", err);
-    const msg = "Une erreur est survenue";
-    setMessage(msg);
-    Alert.alert("Erreur", msg);
-  }
-};
 
+    if (password.length < 6) {
+      Alert.alert("Erreur", "Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const text = await response.text();
+      console.log("Réponse brute backend:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("Ce n'est pas du JSON !");
+        data = null;
+      }
+
+      if (response.ok && data) {
+        Alert.alert("Succès", "Compte créé avec succès !");
+        setName("");
+        setEmail("");
+        setPassword("");
+        router.push("/login"); 
+      } else {
+        Alert.alert("Erreur", data?.message || "Une erreur est survenue");
+      }
+    } catch (err) {
+      console.log("Erreur catch:", err);
+      Alert.alert(
+        "Erreur",
+        "Impossible de créer le compte, vérifiez vos informations"
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titleLogin}>Créer un compte</Text>
+      <Text style={styles.title}>Créer un compte</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Nom"
-        value={form.name}
-        onChangeText={(text) => handleChange("name", text)}
+        value={name}
+        onChangeText={setName}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Email"
-        value={form.email}
+        value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        onChangeText={(text) => handleChange("email", text)}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Mot de passe"
-        secureTextEntry
-        value={form.password}
-        onChangeText={(text) => handleChange("password", text)}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={true}
       />
 
-      <TouchableOpacity style={styles.bttnSignup} onPress={handleSubmit}>
-        <Text style={styles.textBtn}>Créer</Text>
+      <TouchableOpacity style={styles.button} onPress={handleSignup}>
+        <Text style={styles.buttonText}>Créer un compte</Text>
       </TouchableOpacity>
-
-      {message ? <Text style={{ color: "red", marginTop: 10 }}>{message}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    paddingHorizontal: 20,
-    marginTop: 60,
+    padding: 20,
+    marginTop: 40,
   },
-
-  titleLogin: {
-    fontSize: 40,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
-    alignSelf: "center",
     marginBottom: 20,
   },
-
   input: {
     borderWidth: 2,
     borderColor: "#c4c9d8",
@@ -121,20 +118,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
   },
-
-  bttnSignup: {
-    width: "80%",
+  button: {
     backgroundColor: "#261e65",
     paddingVertical: 12,
-    borderRadius: 12,
-    alignSelf: "center",
-    marginTop: 20,
+    borderRadius: 10,
+    marginBottom: 10,
   },
-
-  textBtn: {
+  buttonText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    alignSelf: "center",
+    textAlign: "center",
   },
 });

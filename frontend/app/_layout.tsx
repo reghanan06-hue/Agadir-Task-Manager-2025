@@ -7,7 +7,7 @@ export default function _layout() {
     <Stack.Screen name="login"/>
     <Stack.Screen name="compte"/>
     <Stack.Screen name="addTask"/>
-    <Stack.Screen name="listTasks"/>
+    <Stack.Screen name="dashboard"/>
     
 
 
