@@ -1,73 +1,106 @@
-const Task = require("./models/Tasks");
+import Task from "../models/Task.js";
 
-
-// Créer une tâche
-exports.createTask = async (req, res) => {
+//Créer une tâche : POST /tasks
+export const createTask = async (req, res) => {
   try {
-    const { title, description, due_date } = req.body;
-    const task = await Task.create({
-      user_id: req.user.id,
-      title,
-      description,
-      due_date,
+    const { title, description, status, due_date } = req.body;
+
+    if (!title || !description || !due_date) {
+      return res.status(400).json({ error: "title, description, status, due_date sont obligatoires" });
+    }
+
+    const existingTask = await Task.findOne({ where: { title } });
+    if (existingTask) {
+      return res.status(409).json({ error: "Cette tâche existe déjà" });
+    }
+
+    const newTask = await Task.create({
+      title, description, status, due_date
     });
-    res.status(201).json(task);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    return res.status(201).json({ message: "Tâche créée avec succès", Task: newTask });
+  } catch (error) {
+    console.error("Erreur création Task:", error);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+// Récupérer ses tâches : GET /tasks
+export const getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.findAll();
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
-// Récupérer toutes les tâches de l'utilisateur
-exports.getTasks = async (req, res) => {
+// Mettre à jour une tâche : PUT /tasks/:id
+
+export const updateTask = async (req, res) => {
   try {
-    const tasks = await Task.findAll({ where: { user_id: req.user.id } });
-    res.json(tasks);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const { id } = req.params; // id de la tâche
+    const { title, description, status, due_date } = req.body;
+
+    // Vérifier si la tâche existe
+    const task = await Task.findByPk(id);
+    if (!task) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
+
+    // Mettre à jour les champs
+    task.title = title || task.title;
+    task.description = description || task.description;
+    task.status = status || task.status;
+    task.due_date = due_date || task.due_date;
+
+    await task.save();
+
+    return res.status(200).json({ message: "Tâche mise à jour avec succès", task });
+  } catch (error) {
+    console.error("Erreur updateTask:", error);
+    return res.status(500).json({ error: "Erreur serveur" });
   }
 };
-
-// Modifier une tâche
-exports.updateTask = async (req, res) => {
+// Supprimer une tâche : DELETE /tasks/:id
+export const deleteTask = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      where: { id: req.params.id, user_id: req.user.id },
-    });
-    if (!task) return res.status(404).json({ message: "Tâche non trouvée" });
+    const { id } = req.params;
 
-    await task.update(req.body);
-    res.json(task);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+    // Vérifier si la tâche existe
+    const task = await Task.findByPk(id);
+    if (!task) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
 
-// Supprimer une tâche
-exports.deleteTask = async (req, res) => {
-  try {
-    const task = await Task.findOne({
-      where: { id: req.params.id, user_id: req.user.id },
-    });
-    if (!task) return res.status(404).json({ message: "Tâche non trouvée" });
-
+    // Supprimer la tâche
     await task.destroy();
-    res.json({ message: "Tâche supprimée" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    return res.status(200).json({ message: "Tâche supprimée avec succès" });
+  } catch (error) {
+    console.error("Erreur deleteTask:", error);
+    return res.status(500).json({ error: "Erreur serveur" });
   }
 };
+// Marquer une tâche comme terminée : PUT /tasks/:id/done
 
-// Marquer une tâche comme terminée
-exports.markDone = async (req, res) => {
+export const markTaskDone = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      where: { id: req.params.id, user_id: req.user.id },
-    });
-    if (!task) return res.status(404).json({ message: "Tâche non trouvée" });
+    const { id } = req.params;
 
-    await task.update({ status: "done" });
-    res.json(task);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    // Vérifier si la tâche existe
+    const task = await Task.findByPk(id);
+    if (!task) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
+
+    // Mettre à jour le statut
+    task.status = "done";
+    await task.save();
+
+    return res.status(200).json({ message: "Tâche marquée comme terminée", task });
+  } catch (error) {
+    console.error("Erreur markTaskDone:", error);
+    return res.status(500).json({ error: "Erreur serveur" });
   }
 };

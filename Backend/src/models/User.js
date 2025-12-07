@@ -1,30 +1,20 @@
-
-import  { DataTypes } from "sequelize";
+import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
-import bcrypt from "bcrypt";
-const User = sequelize.define(
-{
-    id:{
-        type:DataTypes.INTEGER,
-        primaryKey :true,
-        autoIncrement :true,
-    },
 
-       username:{
-        type:DataTypes.STRING,
-        primaryKey :true,
-        autoIncrement :true,
-    },
-    email :{
-        type :DataTypes.STRING,
-        allowNull : false,
-        unique :true,
-    },
-  
-    created_at :{
-        type :DataTypes.Datetime,
-        allowNull : false,
-        unique :true,
-    },
-}) ;
-export default User ;
+const User = sequelize.define("User", {
+    id: { type: DataTypes.INTEGER,
+         primaryKey: true,
+          autoIncrement: true },
+
+    name: { type: DataTypes.STRING, 
+        allowNull: false },
+
+    email: { type: DataTypes.STRING, 
+        unique: true, 
+        allowNull: false },
+        
+    password: { type: DataTypes.STRING,
+         allowNull: false },
+});
+
+export default User;
