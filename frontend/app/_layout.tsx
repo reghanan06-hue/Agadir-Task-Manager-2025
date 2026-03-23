@@ -8,8 +8,6 @@ export default function _layout() {
     <Stack.Screen name="compte"/>
     <Stack.Screen name="addTask"/>
     <Stack.Screen name="dashboard"/>
-    
-
 
 
     </Stack>    

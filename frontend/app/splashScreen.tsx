@@ -1,6 +1,6 @@
 import React from 'react'
 import { Text, TouchableOpacity, View,StyleSheet,Image } from 'react-native'
-import { useRouter } from 'expo-router';
+ import { useRouter } from 'expo-router';
 export default function splashScreen() {
     const router = useRouter();
   return (  
@@ -26,9 +26,9 @@ export default function splashScreen() {
     >
           
          <Text style={styles.textBtn}>Créer un compte</Text>
-        </TouchableOpacity>
-        </View>
-  )
+         </TouchableOpacity>
+         </View>
+   )
 }
 const styles = StyleSheet.create({
   container: {
@@ -60,3 +60,4 @@ const styles = StyleSheet.create({
 
   },
 });
+
